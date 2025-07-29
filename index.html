@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grocery List Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container py-16 flex flex-col gap-16">
+    <header>
+      <h1>Grocery List Manager</h1>
+      <p class="text-secondary">Plan and track your household shopping with ease.</p>
+    </header>
+
+    <!-- Add Item Form -->
+    <section class="card" aria-labelledby="form-title">
+      <div class="card__body">
+        <h2 id="form-title" class="mb-8">Add Item</h2>
+        <form id="item-form" class="flex flex-col gap-16 form-container" autocomplete="off">
+          <!-- Row 1: Category, Item, Qty, Unit -->
+          <div class="form-grid">
+            <!-- Category -->
+            <div class="form-group">
+              <label for="category" class="form-label">Category *</label>
+              <select id="category" class="form-control" required aria-describedby="category-help">
+                <option value="">Select Category</option>
+              </select>
+            </div>
+            <!-- Item Name -->
+            <div class="form-group">
+              <label for="item-name" class="form-label">Item Name *</label>
+              <select id="item-name" class="form-control" required aria-describedby="item-help">
+                <option value="">Select Item</option>
+              </select>
+              <input type="text" id="custom-item" class="form-control mt-8 hidden" placeholder="Enter custom item name" maxlength="50" />
+            </div>
+            <!-- Quantity -->
+            <div class="form-group">
+              <label for="quantity" class="form-label">Quantity *</label>
+              <input type="number" id="quantity" class="form-control" min="0.1" step="any" value="1" required aria-describedby="quantity-help" />
+            </div>
+            <!-- Unit -->
+            <div class="form-group">
+              <label for="unit" class="form-label">Unit *</label>
+              <select id="unit" class="form-control" required aria-describedby="unit-help">
+                <option value="">Select Unit</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Pricing -->
+          <fieldset class="form-group">
+            <legend class="form-label mb-8">Pricing Mode</legend>
+            <div class="flex gap-16 flex-wrap items-center">
+              <label class="flex items-center gap-4">
+                <input type="radio" name="price-type" value="perUnit" checked />
+                <span>Price per Unit (₹)</span>
+              </label>
+              <label class="flex items-center gap-4">
+                <input type="radio" name="price-type" value="net" />
+                <span>Net Price (₹)</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Row 2: Price, Comment + Buttons -->
+          <div class="form-grid">
+            <!-- Price -->
+            <div class="form-group">
+              <label for="price" class="form-label" id="price-label">Price per Unit (₹) *</label>
+              <input type="number" id="price" class="form-control" min="0" step="any" required aria-describedby="price-help" />
+            </div>
+            <!-- Comment -->
+            <div class="form-group">
+              <label for="comment" class="form-label">Comment</label>
+              <input type="text" id="comment" class="form-control" maxlength="100" placeholder="Optional notes" />
+            </div>
+            <!-- Buttons as a group spanning two columns when space allows -->
+            <div class="btn-group">
+              <button type="submit" class="btn btn--primary">Add Item</button>
+              <button type="button" id="clear-all" class="btn btn--outline">Clear All</button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Total Amount -->
+        <div class="status status--info mt-8" id="total-amount-wrapper">
+          Total Amount: <span id="total-amount" class="ml-8">₹0.00</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter & Export -->
+    <section class="flex flex-wrap gap-16 items-center">
+      <div class="form-group" style="min-width:150px;">
+        <label for="filter-category" class="form-label">Filter by Category</label>
+        <select id="filter-category" class="form-control">
+          <option value="all">All Categories</option>
+        </select>
+      </div>
+      <div class="form-group" style="min-width:200px;">
+        <label for="search-item" class="form-label">Search Items</label>
+        <input type="text" id="search-item" class="form-control" placeholder="Search by item name..." />
+      </div>
+      <button id="export-csv" class="btn btn--secondary">Export CSV</button>
+    </section>
+
+    <!-- Items Table -->
+    <section class="card" aria-labelledby="list-title">
+      <div class="card__body">
+        <h2 id="list-title" class="mb-8">Grocery Items</h2>
+        <div class="table-wrapper" style="overflow-x:auto;">
+          <table id="items-table" class="items-table" style="width:100%; min-width:900px; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Price (₹)</th>
+                <th>Total (₹)</th>
+                <th>Comment</th>
+                <th>Date Added</th>
+                <th>Bought</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <tr>
+                <td colspan="10" class="empty-state">
+                  No items added yet. Start by selecting a category, item name, and unit above!
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
