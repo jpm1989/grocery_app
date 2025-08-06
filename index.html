@@ -1,144 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Grocery List Manager</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Grocery List Manager</title>
+    <link rel="stylesheet" href="style.css">
+	
 </head>
 <body>
-  <main class="container py-16 flex flex-col gap-16">
-    <header>
-      <h1>Grocery List Manager</h1>
-      <p class="text-secondary">Plan and track your household shopping with ease.</p>
-    </header>
+    <div class="container">
+        <header class="header">
+            <h1>Grocery List Manager</h1>
+            <p>Organize your shopping efficiently</p>
+        </header>
 
-    <!-- Add Item Form -->
-    <section class="card" aria-labelledby="form-title">
-      <div class="card__body">
-        <h2 id="form-title" class="mb-8">Add Item</h2>
-        <form id="item-form" class="flex flex-col gap-16 form-container" autocomplete="off">
-          <!-- Row 1: Category, Item, Qty, Unit -->
-          <div class="form-grid">
-            <!-- Category -->
-            <div class="form-group">
-              <label for="category" class="form-label">Category *</label>
-              <select id="category" class="form-control" required aria-describedby="category-help">
-                <option value="">Select Category</option>
-              </select>
-            </div>
-            <!-- Item Name -->
-            <div class="form-group">
-              <label for="item-name" class="form-label">Item Name *</label>
-              <select id="item-name" class="form-control" required aria-describedby="item-help">
-                <option value="">Select Item</option>
-              </select>
-              <input type="text" id="custom-item" class="form-control mt-8 hidden" placeholder="Enter custom item name" maxlength="50" />
-            </div>
-            <!-- Quantity -->
-            <div class="form-group">
-              <label for="quantity" class="form-label">Quantity *</label>
-              <input type="number" id="quantity" class="form-control" min="0.1" step="any" value="1" required aria-describedby="quantity-help" />
-            </div>
-            <!-- Unit -->
-            <div class="form-group">
-              <label for="unit" class="form-label">Unit *</label>
-              <select id="unit" class="form-control" required aria-describedby="unit-help">
-                <option value="">Select Unit</option>
-              </select>
-            </div>
-          </div>
+        <main class="main-content">
+            <!-- Form Section -->
+            <div class="card form-section">
+                <div class="card__header">
+                    <h2 id="form-title">Add Item</h2>
+                </div>
+                <div class="card__body">
+                    <form id="grocery-form" class="grocery-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="category" class="form-label">Category *</label>
+                                <select id="category" class="form-control" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
 
-          <!-- Pricing -->
-          <fieldset class="form-group">
-            <legend class="form-label mb-8">Pricing Mode</legend>
-            <div class="flex gap-16 flex-wrap items-center">
-              <label class="flex items-center gap-4">
-                <input type="radio" name="price-type" value="perUnit" checked />
-                <span>Price per Unit (₹)</span>
-              </label>
-              <label class="flex items-center gap-4">
-                <input type="radio" name="price-type" value="net" />
-                <span>Net Price (₹)</span>
-              </label>
-            </div>
-          </fieldset>
+                            <div class="form-group">
+                                <label for="item" class="form-label">Item *</label>
+                                <select id="item" class="form-control" required disabled>
+                                    <option value="">Select Item</option>
+                                </select>
+                            </div>
 
-          <!-- Row 2: Price, Comment + Buttons -->
-          <div class="form-grid">
-            <!-- Price -->
-            <div class="form-group">
-              <label for="price" class="form-label" id="price-label">Price per Unit (₹) *</label>
-              <input type="number" id="price" class="form-control" min="0" step="any" required aria-describedby="price-help" />
-            </div>
-            <!-- Comment -->
-            <div class="form-group">
-              <label for="comment" class="form-label">Comment</label>
-              <input type="text" id="comment" class="form-control" maxlength="100" placeholder="Optional notes" />
-            </div>
-            <!-- Buttons as a group spanning two columns when space allows -->
-            <div class="btn-group">
-              <button type="submit" class="btn btn--primary">Add Item</button>
-              <button type="button" id="clear-all" class="btn btn--outline">Clear All</button>
-            </div>
-          </div>
-        </form>
+                            <div class="form-group">
+                                <label for="comment" class="form-label">Comment</label>
+                                <input type="text" id="comment" class="form-control" placeholder="Additional notes or specifications">
+                                <small class="form-help">Leave blank to use selected item above</small>
+                            </div>
 
-        <!-- Total Amount -->
-        <div class="status status--info mt-8" id="total-amount-wrapper">
-          Total Amount: <span id="total-amount" class="ml-8">₹0.00</span>
+                            <div class="form-group">
+                                <label for="quantity" class="form-label">Quantity *</label>
+                                <input type="number" id="quantity" class="form-control" min="0.1" step="0.1" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="unit" class="form-label">Unit *</label>
+                                <select id="unit" class="form-control" required>
+                                    <option value="">Select Unit</option>
+                                </select>
+                            </div>
+
+                            <!-- Pricing Mode Section --> 
+							<fieldset class="form-group full-width"> 
+							<legend class="form-label">Pricing Mode</legend> 
+							<div class="pricing-mode-options"> <label class="pricing-option"> 
+								<input type="radio" name="price-type" value="perUnit" checked> 
+								<span>Price per Unit (₹)</span> </label> <label class="pricing-option">
+								<input type="radio" name="price-type" value="netPrice"> 
+								<span>Net Price (₹)</span> </label> 
+							</div> </fieldset>
+							<div class="form-group"> 
+								<label for="price" class="form-label" id="price-label">Price per Unit (₹) *</label> 
+								<input type="number" id="price" class="form-control" min="0" step="0.01" placeholder="0.00" required> 
+							</div>                             
+
+                            <div class="form-group full-width">
+                                <label for="date" class="form-label">Date *</label>
+                                <input type="date" id="date" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" id="submit-btn" class="btn btn--primary">Add Item</button>
+                            <button type="button" id="cancel-edit-btn" class="btn btn--outline hidden">Cancel Edit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <div class="search-filters">
+                    <div class="form-group">
+                        <label for="search" class="form-label">Search Items</label>
+                        <input type="text" id="search" class="form-control" placeholder="Search by item name or category">
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-category" class="form-label">Filter by Category</label>
+                        <select id="filter-category" class="form-control">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-status" class="form-label">Filter by Status</label>
+                        <select id="filter-status" class="form-control">
+                            <option value="">All Items</option>
+                            <option value="pending">Pending</option>
+                            <option value="bought">Bought</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="clear-all-btn" class="btn btn--outline">Clear All</button>
+                    <button id="all-purchased-btn" class="btn btn--secondary">All Purchased</button>
+                    <button id="export-csv-btn" class="btn btn--primary">Export CSV</button>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-items">0</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="pending-items">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="bought-items">0</div>
+                    <div class="stat-label">Bought</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-cost">₹0.00</div>
+                    <div class="stat-label">Total Cost</div>
+                </div>
+            </div>
+
+            <!-- List Section -->
+            <div class="card list-section">
+                <div class="card__header">
+                    <h2>Shopping List</h2>
+                </div>
+                <div class="card__body">
+                    <div class="table-container">
+                        <table id="grocery-table" class="grocery-table">
+                            <thead>
+                                <tr>
+                                    <th>Bought</th>
+                                    <th>Date</th>
+                                    <th>Category</th>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                    <th>Comment</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="empty-state" class="empty-state">
+                                    <td colspan="9">No items in your grocery list. Start by adding an item above!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Confirm Action</h3>
+            </div>
+            <div class="modal-body">
+                <p id="modal-message">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="modal-cancel" class="btn btn--outline">Cancel</button>
+                <button id="modal-confirm" class="btn btn--primary">Confirm</button>
+            </div>
         </div>
-      </div>
-    </section>
+        <div class="modal-backdrop"></div>
+    </div>
 
-    <!-- Filter & Export -->
-    <section class="flex flex-wrap gap-16 items-center">
-      <div class="form-group" style="min-width:150px;">
-        <label for="filter-category" class="form-label">Filter by Category</label>
-        <select id="filter-category" class="form-control">
-          <option value="all">All Categories</option>
-        </select>
-      </div>
-      <div class="form-group" style="min-width:200px;">
-        <label for="search-item" class="form-label">Search Items</label>
-        <input type="text" id="search-item" class="form-control" placeholder="Search by item name..." />
-      </div>
-      <button id="export-csv" class="btn btn--secondary">Export CSV</button>
-    </section>
-
-    <!-- Items Table -->
-    <section class="card" aria-labelledby="list-title">
-      <div class="card__body">
-        <h2 id="list-title" class="mb-8">Grocery Items</h2>
-        <div class="table-wrapper" style="overflow-x:auto;">
-          <table id="items-table" class="items-table" style="width:100%; min-width:900px; border-collapse:collapse;">
-            <thead>
-              <tr>
-                <th>Category</th>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Unit</th>
-                <th>Price (₹)</th>
-                <th>Total (₹)</th>
-                <th>Comment</th>
-                <th>Date Added</th>
-                <th>Bought</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="table-body">
-              <tr>
-                <td colspan="10" class="empty-state">
-                  No items added yet. Start by selecting a category, item name, and unit above!
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script src="app.js"></script>
+    <script src="app.js"></script>
+	<footer style="text-align: center; padding: 20px;  margin-top: 30px; font-weight: bold;">
+		© Copyright under Jyoti Prakash Mishra
+	</footer>
 </body>
 </html>

@@ -738,254 +738,542 @@ select.form-control {
 }
 
 /* END PERPLEXITY DESIGN SYSTEM */
-/* Application-specific styles */
+/* Custom styles for Grocery List Manager */
 
-/* Form Layout */
-.form-group {
-  flex: 1;
-  position: relative;
+.header {
+  text-align: center;
+  margin-bottom: var(--space-32);
+  padding: var(--space-24) 0;
 }
 
-/* Form grid layout */
+.header h1 {
+  margin-bottom: var(--space-8);
+  color: var(--color-text);
+}
+
+.header p {
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+}
+
+/* Form Section */
+.form-section {
+  background: var(--color-surface);
+}
+
+.grocery-form {
+  width: 100%;
+}
+
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 120px 120px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: var(--space-16);
-  align-items: end;
+  margin-bottom: var(--space-24);
 }
 
-.btn-group {
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-help {
+  display: block;
+  margin-top: var(--space-4);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.form-actions {
   display: flex;
-  gap: var(--space-8);
+  gap: var(--space-12);
   flex-wrap: wrap;
-  grid-column: span 2;
 }
 
-@media (max-width: 768px) {
+/* Ensure form controls are fully functional */
+.form-control {
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}
+
+input.form-control,
+textarea.form-control {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+select.form-control {
+  cursor: pointer;
+  pointer-events: auto !important;
+}
+
+@media (max-width: 640px) {
   .form-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-12);
   }
   
-  .btn-group {
-    grid-column: span 1;
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions .btn {
+    width: 100%;
   }
 }
 
-fieldset {
-  border: none;
-  padding: 0;
-  margin: 0;
+/* Controls Section */
+.controls-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
 }
 
-legend {
-  padding: 0;
-  margin: 0;
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
+.search-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-16);
 }
 
-/* Radio button styling */
-input[type="radio"] {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: var(--color-primary);
+.action-buttons {
+  display: flex;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-/* Fix select dropdown styling - simplified without z-index conflicts */
-select.form-control {
-  padding: var(--space-8) var(--space-32) var(--space-8) var(--space-12);
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-image: var(--select-caret-light);
-  background-repeat: no-repeat;
-  background-position: right var(--space-12) center;
-  background-size: 16px;
-  cursor: pointer;
-}
-
-/* Add a dark mode specific caret */
-@media (prefers-color-scheme: dark) {
-  select.form-control {
-    background-image: var(--select-caret-dark);
+@media (max-width: 640px) {
+  .search-filters {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
   }
 }
 
-/* Also handle data-color-scheme */
-[data-color-scheme="dark"] select.form-control {
-  background-image: var(--select-caret-dark);
+/* Stats Section */
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-16);
 }
 
-[data-color-scheme="light"] select.form-control {
-  background-image: var(--select-caret-light);
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-20);
+  text-align: center;
+  transition: transform var(--duration-fast) var(--ease-standard);
 }
 
-/* Remove all z-index conflicts */
-.btn {
-  min-height: 40px;
+.stat-card:hover {
+  transform: translateY(-2px);
 }
 
-/* Total amount styling */
-#total-amount-wrapper {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-base);
-  display: inline-flex;
-  align-items: center;
-}
-
-#total-amount {
-  color: var(--color-primary);
+.stat-value {
+  font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-xl);
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
 }
 
-/* Table styling */
-.items-table {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  background-color: var(--color-surface);
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
 }
 
-.items-table th,
-.items-table td {
+/* Table Section */
+.list-section {
+  background: var(--color-surface);
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.grocery-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-16);
+}
+
+.grocery-table th,
+.grocery-table td {
   padding: var(--space-12);
   text-align: left;
   border-bottom: 1px solid var(--color-border);
-  font-size: var(--font-size-sm);
 }
 
-.items-table th {
-  background-color: var(--color-secondary);
+.grocery-table th {
+  background: var(--color-bg-1);
   font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
   color: var(--color-text);
-  border-bottom: 2px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
-.items-table tbody tr:hover {
-  background-color: var(--color-secondary);
-}
-
-.items-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-/* Checkbox styling */
-.checkbox-input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--color-primary);
-  cursor: pointer;
-}
-
-/* Action buttons in table */
-.table-btn {
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--font-size-xs);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  border: none;
-  background: var(--color-error);
-  color: var(--color-white);
+.grocery-table tbody tr {
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
-.table-btn:hover {
-  background: var(--color-red-400);
+.grocery-table tbody tr:hover {
+  background: var(--color-bg-2);
 }
 
-/* Item row states */
-.item-row--bought {
-  opacity: 0.6;
-}
-
-.item-row--bought .item-name {
+.grocery-table tbody tr.bought {
+  opacity: 0.7;
   text-decoration: line-through;
+  background: var(--color-bg-3);
 }
 
-/* Price columns styling */
-.price-cell {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-primary);
+.grocery-table tbody tr.editing {
+  background: var(--color-bg-4);
+  border: 2px solid var(--color-primary);
 }
 
-.total-price-cell {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
-}
-
-/* Empty state */
 .empty-state {
   text-align: center;
-  padding: var(--space-32);
   color: var(--color-text-secondary);
   font-style: italic;
 }
 
-/* Header styling */
-header h1 {
-  margin-bottom: var(--space-8);
+.empty-state:hover {
+  background: transparent !important;
 }
 
-header p {
-  color: var(--color-text-secondary);
-  margin: 0;
+/* Action buttons in table */
+.action-buttons-table {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
 }
 
-/* Form section spacing */
-.card h2 {
-  margin-bottom: var(--space-16);
-}
-
-/* Category badge in table */
-.category-badge {
-  display: inline-block;
-  padding: var(--space-2) var(--space-6);
-  background-color: var(--color-bg-1);
-  border-radius: var(--radius-sm);
+.action-buttons-table .btn {
+  padding: var(--space-4) var(--space-8);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-secondary);
+  min-width: auto;
 }
 
-/* Highlight new items */
-@keyframes highlight {
-  0% { background-color: var(--color-bg-3); }
-  100% { background-color: transparent; }
+/* Checkbox styling */
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.item-row--new {
-  animation: highlight 2s ease-out;
+.checkbox-wrapper input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
 }
 
-/* Hidden element styling */
-.hidden {
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16);
+}
+
+.modal.hidden {
   display: none !important;
 }
 
-/* Utility classes */
-.ml-8 {
-  margin-left: var(--space-8);
+/*.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}*/
+
+.modal-content {
+  position: relative;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 400px;
+  width: 100%;
+  overflow: hidden;
 }
 
-.mt-8 {
-  margin-top: var(--space-8);
+.modal-header {
+  padding: var(--space-20);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.mb-8 {
-  margin-bottom: var(--space-8);
+.modal-header h3 {
+  margin: 0;
+  color: var(--color-text);
 }
 
-.text-secondary {
+.modal-body {
+  padding: var(--space-20);
+}
+
+.modal-body p {
+  margin: 0;
   color: var(--color-text-secondary);
 }
 
-/* Disabled select styling */
-select.form-control:disabled {
+.modal-footer {
+  padding: var(--space-20);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-12);
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+  
+  .modal-footer .btn {
+    width: 100%;
+  }
+}
+
+/* Animations and transitions */
+@keyframes highlight {
+  0% {
+    background: var(--color-bg-4);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.highlight {
+  animation: highlight 2s ease-out;
+}
+
+/* Price styling */
+.price {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-success);
+}
+
+.total-price {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+/* Responsive table improvements */
+@media (max-width: 768px) {
+  .grocery-table th,
+  .grocery-table td {
+    padding: var(--space-8);
+    font-size: var(--font-size-sm);
+  }
+  
+  .grocery-table th:nth-child(n+6),
+  .grocery-table td:nth-child(n+6) {
+    display: none;
+  }
+  
+  .action-buttons-table {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .grocery-table th:nth-child(n+4),
+  .grocery-table td:nth-child(n+4) {
+    display: none;
+  }
+  
+  .grocery-table th:nth-child(1),
+  .grocery-table td:nth-child(1),
+  .grocery-table th:nth-child(3),
+  .grocery-table td:nth-child(3),
+  .grocery-table th:nth-child(9),
+  .grocery-table td:nth-child(9) {
+    display: table-cell;
+  }
+}
+
+/* Loading states - ensure they don't interfere with input */
+.loading {
   opacity: 0.6;
-  cursor: not-allowed;
-  background-color: var(--color-secondary);
+}
+
+.loading .form-control {
+  pointer-events: none;
+}
+
+/* Success and error states */
+.success {
+  color: var(--color-success);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+/* Form validation styling */
+.form-control:invalid {
+  border-color: var(--color-error);
+}
+
+.form-control:valid {
+  border-color: var(--color-success);
+}
+
+/* Button variations */
+.btn--danger {
+  background: var(--color-error);
+  color: var(--color-white);
+}
+
+.btn--danger:hover {
+  background: rgba(var(--color-error-rgb), 0.9);
+}
+
+.btn--success {
+  background: var(--color-success);
+  color: var(--color-btn-primary-text);
+}
+
+.btn--success:hover {
+  background: rgba(var(--color-success-rgb), 0.9);
+}
+
+/* Utility classes for the grocery app */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.text-xs {
+  font-size: var(--font-size-xs);
+}
+
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Container improvements */
+.container {
+  max-width: 1200px;
+  padding: var(--space-16) var(--space-16) var(--space-32);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: var(--space-24) var(--space-24) var(--space-32);
+  }
+}
+
+/* Fix for any potential overlay issues */
+* {
+  position: relative;
+}
+
+.modal {
+  position: fixed;
+}
+
+/* Ensure inputs are interactive */
+input, textarea, select {
+  pointer-events: auto !important;
+  touch-action: manipulation;
+}
+
+/* Pricing Mode Styles */
+fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+legend {
+    padding: 0;
+    margin: 0;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+    margin-bottom: var(--space-12);
+}
+
+.pricing-mode-options {
+    display: flex;
+    gap: var(--space-20);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.pricing-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+}
+
+.pricing-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+
+.pricing-option span {
+    font-weight: var(--font-weight-medium);
+    user-select: none;
+}
+
+.pricing-option:hover span {
+    color: var(--color-primary);
+}
+
+@media (max-width: 640px) {
+    .pricing-mode-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-12);
+    }
 }

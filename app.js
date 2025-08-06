@@ -1,600 +1,687 @@
-// Application data and constants
-const STORAGE_KEY = 'groceryListItems';
-const APP_VERSION = '1.0.0';
+// Grocery List Manager Application
+class GroceryListManager {
+    constructor() {
+        this.groceryList = [];
+        this.editingIndex = -1;
+        this.pendingConfirmAction = null;
+        this.categories = {
+            "Fruits": ["Apple", "Banana", "Orange", "Mango", "Grapes", "Pomegranate", "Watermelon", "Pineapple", "Papaya", "Guava", "Other"],
+            "Vegetables": ["Onion", "Potato", "Tomato", "Carrot", "Spinach", "Cabbage", "Cauliflower", "Brinjal", "Okra", "Capsicum", "Other"],
+            "Non Veg": ["Chicken", "Mutton", "Fish", "Prawns", "Eggs", "Other"],
+            "Dairy": ["Milk", "Butter", "Cheese", "Yogurt", "Paneer", "Cream", "Other"],
+            "Bakery": ["Bread", "Buns", "Cake", "Cookies", "Pastry", "Other"],
+            "Pantry": ["Rice", "Wheat Flour", "Mustard Oil","Rice Bran Oil","Sunflower Oil","Coconut Oil", "Sugar", "Salt", "Spices", "Dal", "Other"],
+            "Frozen": ["Ice Cream", "Frozen Vegetables", "Frozen Snacks", "Other"],
+            "Beverages": ["Tea", "Coffee", "Juice", "Soft Drinks", "Water", "Other"],
+            "Snacks": ["Chips", "Biscuits", "Nuts", "Chocolates", "Other"],
+            "Personal Care": ["Soap", "Shampoo", "Toothpaste", "Other"],
+            "Household": ["Detergent", "Cleaning Supplies", "Other"],
+            "Other": ["Other"]
+        };
+        
+        this.units = [
+            { "value": "pcs", "label": "pieces (pcs)" },
+            { "value": "kg", "label": "kilogram (kg)" },
+            { "value": "g", "label": "grams (g)" },
+            { "value": "l", "label": "liters (l)" },
+            { "value": "ml", "label": "milliliters (ml)" },
+            { "value": "dozen", "label": "dozen" },
+            { "value": "pack", "label": "pack" },
+            { "value": "bottle", "label": "bottle" },
+            { "value": "can", "label": "can" },
+            { "value": "box", "label": "box" }
+        ];
 
-const appData = {
-  categories: {
-    "Fruits": ["Apple", "Banana", "Orange", "Mango", "Grapes", "Pomegranate", "Watermelon", "Pineapple", "Papaya", "Guava", "Other"],
-    "Vegetables": ["Onion", "Potato", "Tomato", "Carrot", "Spinach", "Cabbage", "Cauliflower", "Brinjal", "Okra", "Capsicum", "Other"],
-    "Non Veg": ["Chicken", "Mutton", "Fish", "Prawns", "Eggs", "Other"],
-    "Dairy": ["Milk", "Butter", "Cheese", "Yogurt", "Paneer", "Cream", "Other"],
-    "Bakery": ["Bread", "Buns", "Cake", "Cookies", "Pastry", "Other"],
-    "Pantry": ["Rice", "Wheat Flour", "Mustard Oil","Rice Bran Oil","Sunflower Oil","Coconut Oil", "Sugar", "Salt", "Spices", "Dal", "Other"],
-    "Frozen": ["Ice Cream", "Frozen Vegetables", "Frozen Snacks", "Other"],
-    "Beverages": ["Tea", "Coffee", "Juice", "Soft Drinks", "Water", "Other"],
-    "Snacks": ["Chips", "Biscuits", "Nuts", "Chocolates", "Other"],
-    "Personal Care": ["Soap", "Shampoo", "Toothpaste", "Other"],
-    "Household": ["Detergent", "Cleaning Supplies", "Other"],
-    "Other": ["Other"]
-  },
-  units: [
-    { value: "pcs", label: "pieces (pcs)" },
-    { value: "kg", label: "kilogram (kg)" },
-    { value: "g", label: "grams (g)" },
-    { value: "l", label: "liters (l)" },
-    { value: "ml", label: "milliliters (ml)" },
-    { value: "dozen", label: "dozen" },
-    { value: "pack", label: "pack" },
-    { value: "bottle", label: "bottle" },
-    { value: "can", label: "can" },
-    { value: "box", label: "box" }
-  ]
-};
+        this.init();
+    }
 
-// Application state
-let groceryItems = [];
-let nextId = 1;
+    init() {
+        this.loadData();
+        this.setupEventListeners();
+        this.populateDropdowns();
+        this.setTodayDate();
+        this.renderTable();
+        this.updateStats();
+		this.updatePriceLabel();
+		this.setTodayDate();
+    }
 
-// DOM elements
-let categorySelect, itemNameSelect, customItemInput, quantityInput, commentInput, 
-    unitSelect, priceInput, priceLabel, totalAmountElement, tableBody, 
-    filterCategorySelect, searchInput;
+    setupEventListeners() {
+        // Form submission
+        const form = document.getElementById('grocery-form');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleFormSubmit();
+            });
+        }
 
-// Initialize application
-document.addEventListener('DOMContentLoaded', function() {
-  initializeElements();
-  loadFromStorage();
-  populateSelects();
-  setupEventListeners();
-  updateTotal();
-  updatePriceLabel();
-  renderTable();
+        // Category change
+        const categorySelect = document.getElementById('category');
+        if (categorySelect) {
+            categorySelect.addEventListener('change', (e) => {
+                this.populateItemDropdown(e.target.value);
+            });
+        }
+
+        // Search and filters
+        const searchInput = document.getElementById('search');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => this.filterTable());
+        }
+
+        const filterCategory = document.getElementById('filter-category');
+        if (filterCategory) {
+            filterCategory.addEventListener('change', () => this.filterTable());
+        }
+
+        const filterStatus = document.getElementById('filter-status');
+        if (filterStatus) {
+            filterStatus.addEventListener('change', () => this.filterTable());
+        }
+
+        // Action buttons
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', () => this.clearAll());
+        }
+
+        const allPurchasedBtn = document.getElementById('all-purchased-btn');
+        if (allPurchasedBtn) {
+            allPurchasedBtn.addEventListener('click', () => this.markAllPurchased());
+        }
+
+        const exportBtn = document.getElementById('export-csv-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportCSV());
+        }
+
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', () => this.cancelEdit());
+        }
+
+        // Modal events
+        const modalCancel = document.getElementById('modal-cancel');
+        if (modalCancel) {
+            modalCancel.addEventListener('click', () => this.hideModal());
+        }
+
+        const modalConfirm = document.getElementById('modal-confirm');
+        if (modalConfirm) {
+            modalConfirm.addEventListener('click', () => this.confirmAction());
+        }
+
+        const modalBackdrop = document.querySelector('.modal-backdrop');
+        if (modalBackdrop) {
+            modalBackdrop.addEventListener('click', () => this.hideModal());
+        }
+		
+		const priceTypeRadios = document.querySelectorAll('input[name="price-type"]');
+		priceTypeRadios.forEach(radio => {
+		radio.addEventListener('change', () => this.updatePriceLabel());
+		});
+    }
+
+    populateDropdowns() {
+        // Populate category dropdown
+        const categorySelect = document.getElementById('category');
+        const filterCategorySelect = document.getElementById('filter-category');
+        
+        if (categorySelect) {
+            Object.keys(this.categories).forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+        }
+
+        if (filterCategorySelect) {
+            Object.keys(this.categories).forEach(category => {
+                const filterOption = document.createElement('option');
+                filterOption.value = category;
+                filterOption.textContent = category;
+                filterCategorySelect.appendChild(filterOption);
+            });
+        }
+
+        // Populate units dropdown
+        const unitSelect = document.getElementById('unit');
+        if (unitSelect) {
+            this.units.forEach(unit => {
+                const option = document.createElement('option');
+                option.value = unit.value;
+                option.textContent = unit.label;
+                unitSelect.appendChild(option);
+            });
+        }
+    }
+
+    populateItemDropdown(category) {
+        const itemSelect = document.getElementById('item');
+        if (!itemSelect) return;
+
+        itemSelect.innerHTML = '<option value="">Select Item</option>';
+        
+        if (category && this.categories[category]) {
+            itemSelect.disabled = false;
+            this.categories[category].forEach(item => {
+                const option = document.createElement('option');
+                option.value = item;
+                option.textContent = item;
+                itemSelect.appendChild(option);
+            });
+        } else {
+            itemSelect.disabled = true;
+        }
+    }
+
+    setTodayDate() {
+        const dateInput = document.getElementById('date');
+        if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+    }
+
+    handleFormSubmit() {
+        const formData = this.getFormData();
+        
+        if (!this.validateForm(formData)) {
+            return;
+        }
+
+        if (this.editingIndex >= 0) {
+            this.updateItem(formData);
+        } else {
+            this.addItem(formData);
+        }
+
+        this.resetForm();
+        this.renderTable();
+        this.updateStats();
+        this.saveData();
+    }
+
+    getFormData() {
+        const categoryElement = document.getElementById('category');
+        const itemElement = document.getElementById('item');
+        const customItemElement = document.getElementById('custom-item');
+        const quantityElement = document.getElementById('quantity');
+        const unitElement = document.getElementById('unit');
+        const priceElement = document.getElementById('price');
+        const commentElement = document.getElementById('comment');
+        const dateElement = document.getElementById('date');
+
+        const customItem = customItemElement ? customItemElement.value.trim() : '';
+        const selectedItem = itemElement ? itemElement.value : '';
+        const priceValue = priceElement ? priceElement.value : '0';
+		const priceTypeElement = document.querySelector('input[name="price-type"]:checked');
+    
+		//const priceValue = priceElement ? priceElement.value : '0';
+		const quantity = quantityElement ? parseFloat(quantityElement.value) || 0 : 0;
+		const price = parseFloat(priceValue) || 0;
+		const priceType = priceTypeElement ? priceTypeElement.value : 'perUnit';
+		// Calculate price per unit and total based on pricing mode
+		
+		
+		// Calculate price per unit for the item
+		let pricePerUnit;
+		if (priceType === 'perUnit') {
+			pricePerUnit = price;
+		  } else {
+			pricePerUnit = price / quantity;
+		  }
+
+		// Calculate total price for the item
+		let totalPrice;
+		if (priceType === 'perUnit') {
+			totalPrice = price * quantity;
+		} else {
+			totalPrice = price;
+		}
+        
+        return {
+            category: categoryElement ? categoryElement.value : '',
+            item: customItem || selectedItem,
+            quantity: quantityElement ? parseFloat(quantityElement.value) || 0 : 0,
+            unit: unitElement ? unitElement.value : '',
+            price: price,
+			priceType: priceType,
+			pricePerUnit: pricePerUnit,
+			totalPrice: totalPrice,
+            comment: commentElement ? commentElement.value.trim() : '',
+            date: dateElement ? dateElement.value : '',
+            bought: false,
+            id: this.editingIndex >= 0 ? this.groceryList[this.editingIndex].id : Date.now()
+        };
+    }
+
+    validateForm(data) {
+        if (!data.category) {
+            alert('Please select a category.');
+            return false;
+        }
+
+        if (!data.item) {
+            alert('Please select an item or enter a custom item name.');
+            return false;
+        }
+
+        if (!data.quantity || data.quantity <= 0) {
+            alert('Please enter a valid quantity greater than 0.');
+            return false;
+        }
+
+        if (!data.unit) {
+            alert('Please select a unit.');
+            return false;
+        }
+
+        if (!data.date) {
+            alert('Please select a date.');
+            return false;
+        }
+
+        if (data.price < 0) {
+            alert('Price cannot be negative.');
+            return false;
+        }
+
+        return true;
+    }
+
+    addItem(data) {
+        this.groceryList.push(data);
+        console.log('Item added:', data);
+    }
+
+    updateItem(data) {
+        if (this.editingIndex >= 0 && this.editingIndex < this.groceryList.length) {
+            this.groceryList[this.editingIndex] = data;
+            this.editingIndex = -1;
+            this.toggleEditMode(false);
+            
+            // Highlight the updated row briefly
+            setTimeout(() => {
+                const row = document.querySelector(`tr[data-id="${data.id}"]`);
+                if (row) {
+                    row.classList.add('highlight');
+                    setTimeout(() => row.classList.remove('highlight'), 2000);
+                }
+            }, 100);
+        }
+    }
+
+    editItem(index) {
+        if (index < 0 || index >= this.groceryList.length) return;
+
+        const item = this.groceryList[index];
+        this.editingIndex = index;
+
+        // Populate form with item data
+        const categoryElement = document.getElementById('category');
+        const itemElement = document.getElementById('item');
+        const customItemElement = document.getElementById('custom-item');
+        const quantityElement = document.getElementById('quantity');
+        const unitElement = document.getElementById('unit');
+        const priceElement = document.getElementById('price');
+        const commentElement = document.getElementById('comment');
+        const dateElement = document.getElementById('date');
+
+        if (categoryElement) categoryElement.value = item.category;
+        this.populateItemDropdown(item.category);
+        
+        // Check if the item is in the predefined list or custom
+        if (this.categories[item.category] && this.categories[item.category].includes(item.item)) {
+            if (itemElement) itemElement.value = item.item;
+            if (customItemElement) customItemElement.value = '';
+        } else {
+            if (itemElement) itemElement.value = '';
+            if (customItemElement) customItemElement.value = item.item;
+        }
+
+        if (quantityElement) quantityElement.value = item.quantity;
+        if (unitElement) unitElement.value = item.unit;
+        if (priceElement) priceElement.value = item.price;
+        if (commentElement) commentElement.value = item.comment;
+        if (dateElement) dateElement.value = item.date;
+
+        this.toggleEditMode(true);
+        
+        // Scroll to form
+        const formSection = document.querySelector('.form-section');
+        if (formSection) {
+            formSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    toggleEditMode(isEditing) {
+        const formTitle = document.getElementById('form-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const cancelBtn = document.getElementById('cancel-edit-btn');
+
+        if (isEditing) {
+            if (formTitle) formTitle.textContent = 'Update Item';
+            if (submitBtn) {
+                submitBtn.textContent = 'Update Item';
+                submitBtn.className = 'btn btn--success';
+            }
+            if (cancelBtn) cancelBtn.classList.remove('hidden');
+        } else {
+            if (formTitle) formTitle.textContent = 'Add Item';
+            if (submitBtn) {
+                submitBtn.textContent = 'Add Item';
+                submitBtn.className = 'btn btn--primary';
+            }
+            if (cancelBtn) cancelBtn.classList.add('hidden');
+            this.editingIndex = -1;
+        }
+    }
+
+    cancelEdit() {
+        this.resetForm();
+        this.toggleEditMode(false);
+    }
+
+    deleteItem(index) {
+        if (index < 0 || index >= this.groceryList.length) return;
+
+        const item = this.groceryList[index];
+        this.showModal(
+            'Delete Item',
+            `Are you sure you want to delete "${item.item}"?`,
+            () => {
+                this.groceryList.splice(index, 1);
+                this.renderTable();
+                this.updateStats();
+                this.saveData();
+            }
+        );
+    }
+
+    toggleBought(index) {
+        if (index >= 0 && index < this.groceryList.length) {
+            this.groceryList[index].bought = !this.groceryList[index].bought;
+            this.renderTable();
+            this.updateStats();
+            this.saveData();
+        }
+    }
+
+    markAllPurchased() {
+        if (this.groceryList.length === 0) {
+            alert('No items in the list to mark as purchased.');
+            return;
+        }
+
+        const pendingItems = this.groceryList.filter(item => !item.bought).length;
+        if (pendingItems === 0) {
+            alert('All items are already marked as purchased.');
+            return;
+        }
+
+        this.showModal(
+            'Mark All as Purchased',
+            `Are you sure you want to mark all ${pendingItems} pending items as purchased?`,
+            () => {
+                this.groceryList.forEach(item => item.bought = true);
+                this.renderTable();
+                this.updateStats();
+                this.saveData();
+            }
+        );
+    }
+
+    clearAll() {
+        if (this.groceryList.length === 0) {
+            alert('The list is already empty.');
+            return;
+        }
+
+        this.showModal(
+            'Clear All Items',
+            'Are you sure you want to remove all items from the list? This action cannot be undone.',
+            () => {
+                this.groceryList = [];
+                this.renderTable();
+                this.updateStats();
+                this.saveData();
+            }
+        );
+    }
+
+    showModal(title, message, confirmCallback) {
+        const modal = document.getElementById('confirmation-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalMessage) modalMessage.textContent = message;
+        if (modal) modal.classList.remove('hidden');
+        
+        this.pendingConfirmAction = confirmCallback;
+    }
+
+    hideModal() {
+        const modal = document.getElementById('confirmation-modal');
+        if (modal) modal.classList.add('hidden');
+        this.pendingConfirmAction = null;
+    }
+
+    confirmAction() {
+        if (this.pendingConfirmAction) {
+            this.pendingConfirmAction();
+        }
+        this.hideModal();
+    }
+
+    renderTable() {
+        const tbody = document.querySelector('#grocery-table tbody');
+        const emptyState = document.getElementById('empty-state');
+
+        if (!tbody) return;
+
+        if (this.groceryList.length === 0) {
+            if (emptyState) emptyState.style.display = 'table-row';
+            return;
+        }
+
+        if (emptyState) emptyState.style.display = 'none';
+        
+        // Clear existing rows except empty state
+        Array.from(tbody.children).forEach(row => {
+            if (row.id !== 'empty-state') {
+                row.remove();
+            }
+        });
+
+        this.groceryList.forEach((item, index) => {
+            const row = this.createTableRow(item, index);
+            tbody.appendChild(row);
+        });
+
+        this.filterTable();
+    }
+
+    createTableRow(item, index) {
+        const row = document.createElement('tr');
+        row.dataset.id = item.id;
+        row.className = item.bought ? 'bought' : '';
+
+        //const total = (item.quantity * item.price).toFixed(2);
+        const formattedDate = new Date(item.date).toLocaleDateString('en-GB');
+
+        row.innerHTML = `
+            <td>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" ${item.bought ? 'checked' : ''} 
+                           onchange="groceryManager.toggleBought(${index})">
+                </div>
+            </td>
+            <td>${formattedDate}</td>
+            <td>${item.category}</td>
+            <td>${item.item}</td>
+            <td>${item.quantity} ${item.unit}</td>
+            <td class="price">₹${item.pricePerUnit.toFixed(2)}</td>
+            <td class="total-price">₹${item.totalPrice.toFixed(2)}</td>
+            <td>${item.comment || '-'}</td>
+            <td>
+                <div class="action-buttons-table">
+                    <button class="btn btn--secondary btn--sm" onclick="groceryManager.editItem(${index})">
+                        Edit
+                    </button>
+                    <button class="btn btn--danger btn--sm" onclick="groceryManager.deleteItem(${index})">
+                        Delete
+                    </button>
+                </div>
+            </td>
+        `;
+
+        return row;
+    }
+
+    filterTable() {
+        const searchInput = document.getElementById('search');
+        const categoryFilter = document.getElementById('filter-category');
+        const statusFilter = document.getElementById('filter-status');
+
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        const categoryFilterValue = categoryFilter ? categoryFilter.value : '';
+        const statusFilterValue = statusFilter ? statusFilter.value : '';
+
+        const rows = document.querySelectorAll('#grocery-table tbody tr:not(#empty-state)');
+        
+        rows.forEach(row => {
+            const item = this.groceryList.find(item => item.id == row.dataset.id);
+            if (!item) return;
+
+            const matchesSearch = !searchTerm || 
+                item.item.toLowerCase().includes(searchTerm) ||
+                item.category.toLowerCase().includes(searchTerm) ||
+                (item.comment && item.comment.toLowerCase().includes(searchTerm));
+
+            const matchesCategory = !categoryFilterValue || item.category === categoryFilterValue;
+            
+            const matchesStatus = !statusFilterValue || 
+                (statusFilterValue === 'bought' && item.bought) ||
+                (statusFilterValue === 'pending' && !item.bought);
+
+            if (matchesSearch && matchesCategory && matchesStatus) {
+                row.style.display = 'table-row';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    updateStats() {
+        const totalItems = this.groceryList.length;
+        const boughtItems = this.groceryList.filter(item => item.bought).length;
+        const pendingItems = totalItems - boughtItems;
+        //const totalCost = this.groceryList.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+		const totalCost = this.groceryList.reduce((sum, item) => sum + item.totalPrice, 0);
+        const totalItemsElement = document.getElementById('total-items');
+        const boughtItemsElement = document.getElementById('bought-items');
+        const pendingItemsElement = document.getElementById('pending-items');
+        const totalCostElement = document.getElementById('total-cost');
+
+        if (totalItemsElement) totalItemsElement.textContent = totalItems;
+        if (boughtItemsElement) boughtItemsElement.textContent = boughtItems;
+        if (pendingItemsElement) pendingItemsElement.textContent = pendingItems;
+        if (totalCostElement) totalCostElement.textContent = `₹${totalCost.toFixed(2)}`;
+    }
+
+    resetForm() {
+        const form = document.getElementById('grocery-form');
+        if (form) {
+            form.reset();
+        }
+
+        const itemSelect = document.getElementById('item');
+        if (itemSelect) {
+            itemSelect.disabled = true;
+            itemSelect.innerHTML = '<option value="">Select Item</option>';
+        }
+
+        this.setTodayDate();
+    }
+
+    exportCSV() {
+        if (this.groceryList.length === 0) {
+            alert('No items to export.');
+            return;
+        }
+
+        const headers = ['Date', 'Category', 'Item', 'Quantity', 'Unit', 'Price', 'Total', 'Comment', 'Status'];
+        const csvContent = [
+            headers.join(','),
+            ...this.groceryList.map(item => [
+                new Date(item.date).toLocaleDateString('en-GB'),
+                item.category,
+                `"${item.item}"`,
+                item.quantity,
+                item.unit,
+                item.price.toFixed(2),
+                (item.quantity * item.price).toFixed(2),
+                `"${item.comment || ''}"`,
+                item.bought ? 'Bought' : 'Pending'
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `grocery-list-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }
+
+    saveData() {
+        // Storage functionality disabled for sandbox environment
+        try {
+            console.log('Data would be saved:', this.groceryList);
+        } catch (error) {
+            console.log('Storage not available in this environment');
+        }
+    }
+
+    loadData() {
+        // Storage functionality disabled for sandbox environment  
+        try {
+            this.groceryList = [];
+            console.log('Data loaded (empty for sandbox)');
+        } catch (error) {
+            console.log('Storage not available in this environment');
+            this.groceryList = [];
+        }
+    }
+	updatePriceLabel() {
+		const priceLabel = document.getElementById('price-label');
+		const priceTypeRadio = document.querySelector('input[name="price-type"]:checked');
+		
+		if (priceLabel && priceTypeRadio) {
+			if (priceTypeRadio.value === 'perUnit') {
+				priceLabel.textContent = 'Price per Unit (₹) *';
+			} else {
+				priceLabel.textContent = 'Net Price (₹) *';
+			}
+		}
+	}
+
+}
+
+
+
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.groceryManager = new GroceryListManager();
 });
 
-function initializeElements() {
-  categorySelect = document.getElementById('category');
-  itemNameSelect = document.getElementById('item-name');
-  customItemInput = document.getElementById('custom-item');
-  quantityInput = document.getElementById('quantity');
-  commentInput = document.getElementById('comment');
-  unitSelect = document.getElementById('unit');
-  priceInput = document.getElementById('price');
-  priceLabel = document.getElementById('price-label');
-  totalAmountElement = document.getElementById('total-amount');
-  tableBody = document.getElementById('table-body');
-  filterCategorySelect = document.getElementById('filter-category');
-  searchInput = document.getElementById('search-item');
-
-  // Validate critical elements
-  const criticalElements = {
-    categorySelect, itemNameSelect, unitSelect, priceInput, tableBody
-  };
-
-  for (const [name, element] of Object.entries(criticalElements)) {
-    if (!element) {
-      console.error(`Critical element missing: ${name}`);
-      return false;
-    }
-  }
-
-  return true;
-}
-
-function populateSelects() {
-  // Clear and populate categories
-  if (categorySelect) {
-    categorySelect.innerHTML = '<option value="">Select Category</option>';
-    Object.keys(appData.categories).forEach(category => {
-      const option = document.createElement('option');
-      option.value = category;
-      option.textContent = category;
-      categorySelect.appendChild(option);
-    });
-  }
-
-  // Clear and populate units
-  if (unitSelect) {
-    unitSelect.innerHTML = '<option value="">Select Unit</option>';
-    appData.units.forEach(unit => {
-      const option = document.createElement('option');
-      option.value = unit.value;
-      option.textContent = unit.label;
-      unitSelect.appendChild(option);
-    });
-  }
-
-  // Clear and populate filter categories
-  if (filterCategorySelect) {
-    filterCategorySelect.innerHTML = '<option value="all">All Categories</option>';
-    Object.keys(appData.categories).forEach(category => {
-      const option = document.createElement('option');
-      option.value = category;
-      option.textContent = category;
-      filterCategorySelect.appendChild(option);
-    });
-  }
-
-  // Initialize item name select as disabled
-  if (itemNameSelect) {
-    itemNameSelect.innerHTML = '<option value="">Select Item</option>';
-    itemNameSelect.disabled = true;
-  }
-}
-
-function setupEventListeners() {
-  // Form submission with Enter key support
-  const itemForm = document.getElementById('item-form');
-  if (itemForm) {
-    itemForm.addEventListener('submit', handleAddItem);
-
-    // Add keyboard shortcut support
-    itemForm.addEventListener('keydown', function(e) {
-      if (e.ctrlKey && e.key === 'Enter') {
-        e.preventDefault();
-        handleAddItem(e);
-      }
-    });
-  }
-
-  // Category change
-  if (categorySelect) {
-    categorySelect.addEventListener('change', handleCategoryChange);
-  }
-
-  // Item name change
-  if (itemNameSelect) {
-    itemNameSelect.addEventListener('change', handleItemNameChange);
-  }
-
-  // Price type change
-  const priceTypeRadios = document.querySelectorAll('input[name="price-type"]');
-  priceTypeRadios.forEach(radio => {
-    radio.addEventListener('change', updatePriceLabel);
-  });
-
-  // Clear all
-  const clearAllBtn = document.getElementById('clear-all');
-  if (clearAllBtn) {
-    clearAllBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      clearAllItems();
-    });
-  }
-
-  // Filter
-  if (filterCategorySelect) {
-    filterCategorySelect.addEventListener('change', renderTable);
-  }
-
-  // Search with debouncing
-  if (searchInput) {
-    let searchTimeout;
-    searchInput.addEventListener('input', function() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        renderTable();
-      }, 300);
-    });
-  }
-
-  // Export
-  const exportBtn = document.getElementById('export-csv');
-  if (exportBtn) {
-    exportBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      exportToCSV();
-    });
-  }
-}
-
-function handleCategoryChange() {
-  const selectedCategory = categorySelect.value;
-
-  // Clear custom item input
-  if (customItemInput) {
-    customItemInput.classList.add('hidden');
-    customItemInput.required = false;
-    customItemInput.value = '';
-  }
-
-  if (selectedCategory && appData.categories[selectedCategory]) {
-    // Enable and populate item name select
-    itemNameSelect.disabled = false;
-    itemNameSelect.innerHTML = '<option value="">Select Item</option>';
-
-    appData.categories[selectedCategory].forEach(item => {
-      const option = document.createElement('option');
-      option.value = item;
-      option.textContent = item;
-      itemNameSelect.appendChild(option);
-    });
-
-    // Auto-focus on item select
-    setTimeout(() => itemNameSelect.focus(), 100);
-  } else {
-    // Disable item name select if no category selected
-    itemNameSelect.disabled = true;
-    itemNameSelect.innerHTML = '<option value="">Select Item</option>';
-  }
-}
-
-function handleItemNameChange() {
-  const selectedItem = itemNameSelect.value;
-
-  if (selectedItem === 'Other') {
-    customItemInput.classList.remove('hidden');
-    customItemInput.required = true;
-    setTimeout(() => customItemInput.focus(), 100);
-  } else {
-    customItemInput.classList.add('hidden');
-    customItemInput.required = false;
-    customItemInput.value = '';
-
-    // Auto-focus on quantity if item is selected
-    if (selectedItem) {
-      setTimeout(() => quantityInput.focus(), 100);
-    }
-  }
-}
-
-function updatePriceLabel() {
-  const priceTypeRadio = document.querySelector('input[name="price-type"]:checked');
-
-  if (priceTypeRadio && priceLabel) {
-    const priceType = priceTypeRadio.value;
-    if (priceType === 'perUnit') {
-      priceLabel.textContent = 'Price per Unit (₹) *';
-    } else {
-      priceLabel.textContent = 'Net Price (₹) *';
-    }
-  }
-}
-
-function validateForm(formData) {
-  const { category, itemName, quantity, unit, price } = formData;
-
-  if (!category) {
-    showError('Please select a category');
-    categorySelect.focus();
-    return false;
-  }
-
-  if (!itemName || itemName.trim().length === 0) {
-    showError('Please select or enter an item name');
-    if (itemNameSelect.value === 'Other') {
-      customItemInput.focus();
-    } else {
-      itemNameSelect.focus();
-    }
-    return false;
-  }
-
-  if (!quantity || quantity <= 0) {
-    showError('Please enter a valid quantity');
-    quantityInput.focus();
-    return false;
-  }
-
-  if (!unit) {
-    showError('Please select a unit');
-    unitSelect.focus();
-    return false;
-  }
-
-  if (!price || price <= 0) {
-    showError('Please enter a valid price');
-    priceInput.focus();
-    return false;
-  }
-
-  return true;
-}
-
-function showError(message) {
-  // Could be enhanced with a toast notification system
-  alert(message);
-}
-
-function handleAddItem(e) {
-  e.preventDefault();
-  e.stopPropagation();
-
-  const category = categorySelect.value;
-  const selectedItemName = itemNameSelect.value;
-  const itemName = selectedItemName === 'Other' ? customItemInput.value.trim() : selectedItemName;
-  const quantity = parseFloat(quantityInput.value);
-  const comment = commentInput.value.trim();
-  const unit = unitSelect.value;
-  const priceTypeRadio = document.querySelector('input[name="price-type"]:checked');
-  const priceType = priceTypeRadio ? priceTypeRadio.value : 'perUnit';
-  const price = parseFloat(priceInput.value);
-
-  const formData = { category, itemName, quantity, unit, price };
-
-  if (!validateForm(formData)) {
-    return;
-  }
-
-  // Check for duplicates
-  const existingItem = groceryItems.find(item => 
-    item.category === category && 
-    item.itemName.toLowerCase() === itemName.toLowerCase()
-  );
-
-  if (existingItem && !confirm(`Item "${itemName}" already exists in ${category}. Add anyway?`)) {
-    return;
-  }
-
-  // Calculate price per unit for the item
-  let pricePerUnit;
-  if (priceType === 'perUnit') {
-    pricePerUnit = price;
-  } else {
-    pricePerUnit = price / quantity;
-  }
-
-  // Calculate total price for the item
-  let totalPrice;
-  if (priceType === 'perUnit') {
-    totalPrice = price * quantity;
-  } else {
-    totalPrice = price;
-  }
-
-  // Create new item
-  const newItem = {
-    id: nextId++,
-    category,
-    itemName,
-    quantity,
-    comment,
-    unit,
-    priceType,
-    pricePerUnit,
-    totalPrice,
-    bought: false,
-    dateAdded: new Date().toLocaleDateString('en-IN')
-  };
-
-  groceryItems.push(newItem);
-
-  // Save to storage
-  saveToStorage();
-
-  // Reset form
-  resetForm();
-
-  // Update display
-  updateTotal();
-  renderTable();
-
-  // Focus back to category for next item
-  setTimeout(() => categorySelect.focus(), 100);
-
-  // Add highlight animation to new row
-  setTimeout(() => {
-    const newRow = document.querySelector(`[data-item-id="${newItem.id}"]`);
-    if (newRow) {
-      newRow.classList.add('item-row--new');
-    }
-  }, 200);
-}
-
-function resetForm() {
-  // Reset all form fields
-  categorySelect.value = '';
-  itemNameSelect.innerHTML = '<option value="">Select Item</option>';
-  itemNameSelect.disabled = true;
-  customItemInput.classList.add('hidden');
-  customItemInput.required = false;
-  customItemInput.value = '';
-  quantityInput.value = '1';
-  commentInput.value = ''; // Fixed missing semicolon
-  unitSelect.value = '';
-  priceInput.value = '';
-
-  // Reset radio button
-  const perUnitRadio = document.querySelector('input[name="price-type"][value="perUnit"]');
-  if (perUnitRadio) {
-    perUnitRadio.checked = true;
-  }
-  updatePriceLabel();
-}
-
-function deleteItem(id) {
-  if (confirm('Are you sure you want to delete this item?')) {
-    groceryItems = groceryItems.filter(item => item.id !== id);
-    saveToStorage();
-    updateTotal();
-    renderTable();
-  }
-}
-
-function toggleBought(id) {
-  const item = groceryItems.find(item => item.id === id);
-  if (item) {
-    item.bought = !item.bought;
-    saveToStorage();
-    renderTable();
-  }
-}
-
-function clearAllItems() {
-  if (groceryItems.length === 0) {
-    showError('No items to clear');
-    return;
-  }
-
-  if (confirm('Are you sure you want to clear all items? This action cannot be undone.')) {
-    groceryItems = [];
-    nextId = 1;
-    saveToStorage();
-    updateTotal();
-    renderTable();
-    resetForm();
-  }
-}
-
-function updateTotal() {
-  const total = groceryItems.reduce((sum, item) => sum + item.totalPrice, 0);
-  if (totalAmountElement) {
-    totalAmountElement.textContent = `₹${total.toFixed(2)}`;
-  }
-}
-
-function getFilteredItems() {
-  const filterCategory = filterCategorySelect ? filterCategorySelect.value : 'all';
-  const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
-
-  let filteredItems = groceryItems;
-
-  if (filterCategory !== 'all') {
-    filteredItems = filteredItems.filter(item => item.category === filterCategory);
-  }
-
-  if (searchTerm) {
-    filteredItems = filteredItems.filter(item => 
-      item.itemName.toLowerCase().includes(searchTerm) ||
-      item.comment.toLowerCase().includes(searchTerm)
-    );
-  }
-
-  return filteredItems;
-}
-
-function sanitizeHTML(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function renderTable() {
-  if (!tableBody) return;
-
-  const filteredItems = getFilteredItems();
-
-  if (filteredItems.length === 0) {
-    const emptyMessage = groceryItems.length === 0 
-      ? 'No items added yet. Start by selecting a category, item name, and unit above!'
-      : 'No items match the current filter criteria.';
-
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="10" class="empty-state">${emptyMessage}</td>
-      </tr>
-    `;
-    return;
-  }
-
-  tableBody.innerHTML = filteredItems.map(item => {
-    const unitLabel = appData.units.find(u => u.value === item.unit)?.label || item.unit;
-    return `
-      <tr class="item-row ${item.bought ? 'item-row--bought' : ''}" data-item-id="${item.id}">
-        <td><span class="category-badge">${sanitizeHTML(item.category)}</span></td>
-        <td class="item-name">${sanitizeHTML(item.itemName)}</td>
-        <td>${item.quantity}</td>
-        <td>${sanitizeHTML(unitLabel)}</td>        
-        <td class="price-cell">₹${item.pricePerUnit.toFixed(2)}</td>
-        <td class="total-price-cell">₹${item.totalPrice.toFixed(2)}</td>
-        <td>${sanitizeHTML(item.comment || '-')}</td>
-        <td>${item.dateAdded}</td>
-        <td>
-          <input type="checkbox" class="checkbox-input" ${item.bought ? 'checked' : ''} 
-                 onchange="toggleBought(${item.id})" aria-label="Mark as bought" />
-        </td>
-        <td>
-          <button class="table-btn" onclick="deleteItem(${item.id})" title="Delete item" aria-label="Delete ${sanitizeHTML(item.itemName)}">
-            Delete
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
-
-function saveToStorage() {
-  try {
-    const dataToSave = {
-      items: groceryItems,
-      nextId: nextId,
-      lastUpdated: new Date().toISOString(),
-      version: APP_VERSION
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  } catch (error) {
-    console.error('Failed to save to localStorage:', error);
-    showError('Failed to save data. Your changes may be lost.');
-  }
-}
-
-function loadFromStorage() {
-  try {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-
-      // Validate data structure
-      if (parsedData && Array.isArray(parsedData.items)) {
-        groceryItems = parsedData.items;
-        nextId = parsedData.nextId || 1;
-
-        // Ensure nextId is greater than any existing ID
-        if (groceryItems.length > 0) {
-          const maxId = Math.max(...groceryItems.map(item => item.id || 0));
-          nextId = Math.max(nextId, maxId + 1);
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Failed to load from localStorage:', error);
-    // Reset to empty state on error
-    groceryItems = [];
-    nextId = 1;
-  }
-}
-
-function exportToCSV() {
-  if (groceryItems.length === 0) {
-    showError('No items to export');
-    return;
-  }
-
-  const headers = ['Category', 'Item', 'Quantity', 'Unit', 'Price per Unit (₹)', 'Total Price (₹)', 'Comment', 'Date Added', 'Bought'];
-  const csvContent = [
-    headers.join(','),
-    ...groceryItems.map(item => {
-      const unitLabel = appData.units.find(u => u.value === item.unit)?.label || item.unit;
-      return [
-        `"${item.category}"`,
-        `"${item.itemName}"`,
-        item.quantity,
-        `"${unitLabel}"`,
-        item.pricePerUnit.toFixed(2),
-        item.totalPrice.toFixed(2),
-        `"${item.comment || ''}"`,
-        `"${item.dateAdded}"`,
-        item.bought ? 'Yes' : 'No'
-      ].join(',');
-    })
-  ].join('\n');
-
-  try {
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `grocery-list-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error('Failed to export CSV:', error);
-    showError('Failed to export data. Please try again.');
-  }
-}
-
-// Export functions for global access (needed for onclick handlers)
-window.deleteItem = deleteItem;
-window.toggleBought = toggleBought;
+// Export for global access
+window.GroceryListManager = GroceryListManager;
